@@ -486,6 +486,16 @@ button_change_ip = tk.Button(
 )
 button_change_ip.grid(row=5, column=0, pady=10)
 
+
+button_change_ip = tk.Button(
+    frame_main,
+    text="Switches",
+    command=None,
+    #bg="#ADFF2F"
+
+)
+button_change_ip.grid(row=6, column=0, pady=10)
+
 button_change_name = tk.Button(
     frame_main,
     text="Change Name",
