@@ -43,7 +43,7 @@ def receiver(sock):
     return switches
 
 
-def main():
+def ss():
     sel = selectors.DefaultSelector()
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
 
@@ -57,7 +57,7 @@ def main():
         while True:
             events = sel.select(timeout=0.1)
 
-            print(sel.get_map().values())
+            #print(sel.get_map().values())
             if events:
                 break
 
@@ -67,4 +67,4 @@ def main():
         return switches
 
 if __name__ == "__main__":
-    print(*main(), sep="\n")
+    print(*ss(), sep="\n")
