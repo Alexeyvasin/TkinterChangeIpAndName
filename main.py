@@ -1,16 +1,16 @@
+import _tkinter
 import re
 import socket
 import telnetlib
-import tkinter
 import tkinter as tk
 from threading import Lock
 from threading import Thread
-from time import sleep
+from time import sleep, time
 from tkinter import ttk
 import requests
 from pythonping import ping
 from threading import Event
-from ttkwidgets import checkboxtreeview
+from ttkwidgets import CheckboxTreeview
 from switches_searcher import ss
 
 
@@ -618,52 +618,64 @@ tr_create_Sw = Thread(target=creator_sw, daemon=True)
 tr_create_Sw.start()
 
 
-def create_window():
-
-    # found_sws =set()
-    # for _ in range(3):
-    #     new_found_sws = ss()
-    #     found_sws.union(found_sws, new_found_sws)
-    # print(*found_sws)
+# window for select switches
+wind_switches = tk.Toplevel()
 
 
-    wind_switches = tk.Toplevel(root)
-    frame_switches = tk.Frame(wind_switches)
-    frame_switches.grid()
-    trv_switches = checkboxtreeview.CheckboxTreeview(frame_switches)
+wind_switches.title("Searcher switch")
 
-    trv_switches.insert("", "end", "Block1", text="Блок 1")
-    trv_switches.insert("", "end", "Block2", text="Блок 2")
-    trv_switches.insert("", "end", "Block3", text="Блок 3")
-    trv_switches.insert("", "end", "KPP1", text="КПП 1")
-    trv_switches.insert("", "end", "KPP3", text="КПП 3")
+frame_switches = tk.Frame(wind_switches)
 
-    for sw in ips_of_switches:
-        if int(sw.split(".")[2]) < 41:
-            trv_switches.insert("Block1","end", sw, text=sw)
-        elif int(sw.split(".")[2]) < 61:
-            trv_switches.insert("Block2", "end", sw, text=sw)
-        elif int(sw.split(".")[2]) < 95:
-            trv_switches.insert("Block3", "end", sw, text=sw)
-        elif int(sw.split(".")[2]) == 95:
-            trv_switches.insert("KPP1", "end", sw, text=sw)
-        elif int(sw.split(".")[2]) == 96:
-            trv_switches.insert("KPP3", "end", sw, text=sw)
+frame_switches.pack(fill="both", expand=True)
+
+trv_switches = CheckboxTreeview(frame_switches, height=35)
 
 
-    trv_switches.grid()
-    return wind_switches
+
+trv_switches.insert("", "end", "Block1", text="Блок 1")
+trv_switches.insert("", "end", "Block2", text="Блок 2")
+trv_switches.insert("", "end", "Block3", text="Блок 3")
+trv_switches.insert("", "end", "KPP1", text="КПП 1")
+trv_switches.insert("", "end", "KPP3", text="КПП 3")
+for sw in ips_of_switches:
+    if int(sw.split(".")[2]) < 41:
+        trv_switches.insert("Block1","end", sw, text=sw)
+    elif int(sw.split(".")[2]) < 61:
+        trv_switches.insert("Block2", "end", sw, text=sw)
+    elif int(sw.split(".")[2]) < 95:
+        trv_switches.insert("Block3", "end", sw, text=sw)
+    elif int(sw.split(".")[2]) == 95:
+        trv_switches.insert("KPP1", "end", sw, text=sw)
+    elif int(sw.split(".")[2]) == 96:
+        trv_switches.insert("KPP3", "end", sw, text=sw)
+trv_switches.pack(fill="both", expand=True)
 
 
-wind_switches = create_window()
+def print_inf():
+    print(trv_switches.get_checked())
+
+btn = tk.Button(frame_switches,
+                text="OK",
+                command=print_inf
+                )
+
+btn.pack()
+
 
 # def focus_win():
 #     wind_switches.focus_set()
+def wind_setting():
+    wind_switches.focus_set()
+
+
+root.bind("<FocusIn>", lambda f: wind_setting())
+root.unbind("<Focus>")
+
 #
-root.bind("<FocusIn>", lambda f: wind_switches.focus_set())
-#
-#
-root.after(50, root.focus)
+t0 = time()
+root.after(30, root.focus)
+root.after(50, lambda: root.unbind("<FocusIn>"))
+
 root.mainloop()
 
 

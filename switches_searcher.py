@@ -1,9 +1,6 @@
 import socket
 import selectors
-from time import time
-
-from time import sleep
-
+from time import time, sleep
 
 def sender(sock):
     for i in range(2):
@@ -30,10 +27,6 @@ def receiver(sock):
         # print(data_dec)
         data = tuple(data_dec.split())
         switches.add((addr, data))
-
-        # if switches == switches_next and time() - t0 > 1:
-        #     break
-
         sleep(0.05)
         try:
             data, addr = sock.recvfrom(1024)
@@ -47,24 +40,24 @@ def ss():
     sel = selectors.DefaultSelector()
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP) as sock:
 
-        sock.bind(("192.0.0.133", 62992))
+        sock.bind(("", 62992))
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+        sock.setblocking(False)
         sock.setblocking(False)
 
         sender(sock)
 
         sel.register(sock, selectors.EVENT_READ)
+        t0 = time()
         while True:
             events = sel.select(timeout=0.1)
-
-            #print(sel.get_map().values())
-            if events:
+            if events or time() - t0 > 2:
                 break
-
+        switches = set()
         for key, mask in events:
             switches = receiver(sock)
 
         return switches
 
 if __name__ == "__main__":
-    print(*ss(), sep="\n")
+    print(*(ss()), sep="\n")
