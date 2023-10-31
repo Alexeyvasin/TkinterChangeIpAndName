@@ -25,7 +25,7 @@ def receiver(sock):
                 continue
             data_dec += chr(ch)
         # print(data_dec)
-        data = tuple(data_dec.split())
+        data = (data_dec.split()[6],)
         switches.add((addr, data))
         sleep(0.05)
         try:

@@ -12,12 +12,14 @@ from pythonping import ping
 from threading import Event
 from ttkwidgets import CheckboxTreeview
 from switches_searcher import ss
+import asyncio
 
 
 range_of_shwitches_start = "10.100.2.0"
 range_of_shwitches_stop = "10.100.70.16"
 net_mask = "255.0.0.0"
 gateway = "192.168.1.1"
+not_selected_sw = True
 ips_of_switches = (
 "10.100.2.3", "10.100.2.1", "10.100.2.2", "10.100.11.3", "10.100.11.4", "10.100.11.5", "10.100.11.6", "10.100.12.3",
 "10.100.12.4", "10.100.12.5", "10.100.12.6", "10.100.13.3", "10.100.13.4", "10.100.13.5", "10.100.14.3", "10.100.14.4",
@@ -53,6 +55,8 @@ ips_of_switches = (
 "10.100.93.10", "10.100.93.11", "10.100.93.12", "10.100.93.13", "10.100.93.14", "10.100.93.15", "10.100.94.1",
 "10.100.94.2", "10.100.94.3", "10.100.94.4", "10.100.94.5", "10.100.94.6", "10.100.94.7", "10.100.94.8", "10.100.94.9",
 "10.100.94.10", "10.100.94.11", "10.100.94.12")
+
+found_switches = tuple()
 ips_def = []  # [["def_ip", ip, mac], ...]
 names_def = []
 ips_for_change = []  # [[self.IP(sw), port, target_mac],...]
@@ -62,9 +66,32 @@ changing_ip = []
 changing_name = []
 changed_scsf = False
 changed_scsf_name = False
-found_sw = []
+found_sw = ()
 found_mac = Event()
 switches = []
+
+
+def switchs_sercher():
+    global found_sw
+    global found_switches
+    f_switches = set()
+    for _ in range(3):
+        s = ss()
+        for i in s:
+            f_switches.add(i)
+        sleep(0.5)
+
+    f_switches = tuple(f_switches)
+    for i in f_switches:
+        if i[1][0] == "DGS-3000-28XMP":
+            found_switches += (i[0][0],)
+
+    print(len(found_switches))
+    found_sw = tuple(found_switches)
+
+sw_srch_tr = Thread(target=switchs_sercher, daemon=True)
+sw_srch_tr.start()
+
 
 
 def start_thread_for_change_name():
@@ -224,7 +251,7 @@ def creator_sw():
     global found_mac
     while True:
         for ip in ips_def:
-            if "192.168.1.188" == ip[1]:
+            if "192.168.1.188" == ip[1] and not not_selected_sw:
                 if ip[2] in [i[2] for i in ips_for_change]:
                     continue
                 for sw in ips_of_switches:
@@ -618,6 +645,8 @@ tr_create_Sw = Thread(target=creator_sw, daemon=True)
 tr_create_Sw.start()
 
 
+
+
 # window for select switches
 wind_switches = tk.Toplevel()
 
@@ -660,12 +689,35 @@ btn = tk.Button(frame_switches,
                 )
 
 btn.pack()
+lbl_found_sw = tk.Label(frame_switches, text="Идет поиск коммутаторов в сети")
+lbl_found_sw.pack()
 
 
 # def focus_win():
 #     wind_switches.focus_set()
 def wind_setting():
     wind_switches.focus_set()
+
+def lable_updeter():
+    global found_sw
+    i = 0
+    while not found_sw:
+        i+=1
+        if i == 1:
+            lbl_found_sw.config(text="Поиск коммутаторов.")
+            lbl_found_sw.update()
+        elif i == 2:
+            lbl_found_sw.config(text="Поиск коммутаторов..")
+            lbl_found_sw.update()
+        else:
+            lbl_found_sw.config(text="Поиск коммутаторов...")
+            lbl_found_sw.update()
+        if i == 3:
+            i = 0
+        wind_switches.after(500)
+    lbl_found_sw.config(text=f"Найдено {len(found_sw)} коммутаторов!")
+    lbl_found_sw.update()
+
 
 
 root.bind("<FocusIn>", lambda f: wind_setting())
@@ -675,6 +727,7 @@ root.unbind("<Focus>")
 t0 = time()
 root.after(30, root.focus)
 root.after(50, lambda: root.unbind("<FocusIn>"))
+wind_switches.after(50, lable_updeter)
 
 root.mainloop()
 
