@@ -230,8 +230,10 @@ class Switch(Thread):
         for i in range(1):
             try:
                 self.search_mac_telnet(self.target_mac)
-            except ConnectionError:
-                print("Whong")
+            except ConnectionError as exc:
+                print("Wrong", exc)
+            except EOFError as exc:
+                print ("Wrong", exc)
                 pass
 
     def search_mac_telnet(self, target_mac):
