@@ -14,7 +14,7 @@ range_of_shwitches_start = "10.100.2.0"
 range_of_shwitches_stop = "10.100.70.16"
 net_mask = "255.0.0.0"
 gateway = "192.168.1.1"
-ips_of_switches = ("10.100.2.3", "10.100.2.1", "10.100.2.2", "10.100.11.3", "10.100.11.4",
+ips_of_switches = ("10.100.2.1", "10.100.2.2", "10.100.11.3", "10.100.11.4",
                    "10.100.11.5", "10.100.11.6", "10.100.12.3", "10.100.12.4", "10.100.12.5", "10.100.12.6",
                    "10.100.13.3", "10.100.13.4", "10.100.13.5", "10.100.14.3", "10.100.14.4", "10.100.14.5",
                    "10.100.14.6", "10.100.14.7", "10.100.15.3","10.100.15.4", "10.100.15.5", "10.100.15.6",
@@ -57,8 +57,7 @@ ips_of_switches = ("10.100.2.3", "10.100.2.1", "10.100.2.2", "10.100.11.3", "10.
                    "10.100.93.7", "10.100.93.8", "10.100.93.9", "10.100.93.10", "10.100.93.11", "10.100.93.12",
                    "10.100.93.13", "10.100.93.14", "10.100.93.15", "10.100.94.1", "10.100.94.2", "10.100.94.3",
                    "10.100.94.4", "10.100.94.5", "10.100.94.6", "10.100.94.7", "10.100.94.8", "10.100.94.9",
-                   "10.100.94.10", "10.100.94.11", "10.100.94.12", "10.100.97.1", "10.100.97.2", "10.100.97.3",
-                   "10.100.97.4", "10.100.97.5", "10.100.97.6")
+                   "10.100.94.10", "10.100.94.11", "10.100.94.12", )
 ips_def = []  # [["def_ip", ip, mac], ...]
 names_def = []
 ips_for_change = []  # [[self.IP(sw), port, target_mac],...]
@@ -257,14 +256,15 @@ class Switch(Thread):
             try:
                 self.search_mac_telnet(self.target_mac)
             except ConnectionError as exc:
-                print("Wrong", exc)
+                print("Wrong ConnectionError", exc)
             except EOFError as exc:
-                print ("Wrong", exc)
+                print ("Wrong EOFError", exc)
                 pass
 
     def search_mac_telnet(self, target_mac):
         try:
             tn = telnetlib.Telnet(self.IP)
+            print(self.IP)
         except TimeoutError as exc:
             print(exc)
             tn = None
@@ -279,7 +279,7 @@ class Switch(Thread):
             if found_mac.is_set():
                 break
             tn.write(('show fdb port ' + str(p)).encode() + b'\n')
-            res = tn.read_until('Priori'.encode(), timeout=0.1)
+            res = tn.read_until('Priori'.encode(), timeout=0.3)
             rsl_list = res.decode('ascii').split()
 
             for i, s in enumerate(rsl_list):
@@ -344,7 +344,7 @@ def wiretapping():
             s = ''
             for i in data:
                 s += chr(i)
-            mac = re.findall('.*TR-.+_(f0:23:..:..:..:..).+', s)
+            mac = re.findall('.*TR-.+(f0:23:..:..:..:..).+', s)
             lock.acquire()
             is_mac = 0
             for i in ips_def:
@@ -358,7 +358,7 @@ def wiretapping():
             s = ''
             for i in data:
                 s += chr(i)
-            mac = re.findall('.*TR-.+_(f0:23:..:..:..:..).+', s)
+            mac = re.findall('.*TR-.+(f0:23:..:..:..:..).+', s)
             for_append = ["def_name", addr[0], nonamed[0], mac[0]]
             if for_append not in names_def:
                 names_def.append(for_append)
