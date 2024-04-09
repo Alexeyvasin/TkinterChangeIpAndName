@@ -95,6 +95,6 @@ if __name__ == '__main__':
 
     procs = []
     for sw in ips_of_switches:
-        proc = multiprocessing.Process(target=search_mac_telnet, args=(sw, 'f0:23:b9:65:b8:1b'))
+        proc = multiprocessing.Process(target=search_mac_telnet, args=(sw, 'f0:23:b9:6e:cc:f1'))
         procs.append(proc)
         proc.start()

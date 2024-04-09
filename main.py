@@ -208,7 +208,11 @@ def request_for_change_name():
     headers = {"Accept": "*/*", "Content-Type": "text/xml;charset=utf-8", "Content-Length": "203"}
     data = new_xml
     params = {"subject": "devpara"}
-    res = requests.post(url=url, headers=headers, data=data, params=params)
+    try:
+        res = requests.post(url=url, headers=headers, data=data, params=params)
+    except ConnectionError as e:
+        print(e)
+        print(f'url: {url}, headers: {headers}, data:{data}, params: {params}')
     if res.status_code == 200:
         changed_scsf_name = True
         pass
@@ -226,7 +230,7 @@ def creator_sw():
                 for sw in ips_of_switches:
                     if found_mac.is_set():
                         break
-                    if not ping(sw, count=1, timeout=0.1).success():
+                    if not ping(sw, count=1, timeout=0.3).success():
                         continue
                     switch = Switch(sw, auth, ip[2])
                     switches.append(switch)
@@ -236,8 +240,8 @@ def creator_sw():
                     del(swd)
                 found_mac.clear()
             else:
-                sleep(0.5)
-        sleep(0.5)
+                sleep(0.1)
+        sleep(0.1)
     # sleep(1)
 
 
@@ -263,8 +267,7 @@ class Switch(Thread):
 
     def search_mac_telnet(self, target_mac):
         try:
-            tn = telnetlib.Telnet(self.IP)
-            print(self.IP)
+            tn = telnetlib.Telnet(self.IP, timeout=5)
         except TimeoutError as exc:
             print(exc)
             tn = None
@@ -279,7 +282,7 @@ class Switch(Thread):
             if found_mac.is_set():
                 break
             tn.write(('show fdb port ' + str(p)).encode() + b'\n')
-            res = tn.read_until('Priori'.encode(), timeout=0.3)
+            res = tn.read_until('Priori'.encode(), timeout=0.5)
             rsl_list = res.decode('ascii').split()
 
             for i, s in enumerate(rsl_list):
@@ -588,7 +591,7 @@ def searche_of_switch():
 
         for sw in cur_sw:
             if sw in found_sw: continue
-            if ping(sw, count=1, timeout=0.02).success():
+            if ping(sw, count=1, timeout=0.2).success():
                 found_sw.append(sw)
 
 
