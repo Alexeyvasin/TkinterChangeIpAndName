@@ -379,7 +379,7 @@ def sender():
             payload = bytes.fromhex(payload_hex_string)
             sock.sendto(payload, ("255.255.255.255", 6011))
         sock.close()
-        sleep(1)
+        sleep(0.5)
 
 
 root = tk.Tk()

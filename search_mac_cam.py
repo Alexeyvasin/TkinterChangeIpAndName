@@ -85,6 +85,7 @@ def search_mac_telnet(ip, target_mac):
                     return
                 if mac == target_mac:
                     print("Founded!: ", ip, port)
+                    print(str(s))
             else:
                 continue
     tn.close()
@@ -95,6 +96,6 @@ if __name__ == '__main__':
 
     procs = []
     for sw in ips_of_switches:
-        proc = multiprocessing.Process(target=search_mac_telnet, args=(sw, 'f0:23:b9:6e:cc:f1'))
+        proc = multiprocessing.Process(target=search_mac_telnet, args=(sw, 'f0:23:b9:62:c0:82'))
         procs.append(proc)
         proc.start()
