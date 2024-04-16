@@ -48,6 +48,8 @@ def wiretapping(mac: str):
 
 
 def replace_ip(new_ip, cam_mac):
+    if len(new_ip.split('.')) != 4:
+        return 'Wrong IP!'
     auth = 'admin:admin'
     net_mask = '255.0.0.0'
     gateway = '192.168.1.1'
@@ -75,6 +77,7 @@ def replace_ip(new_ip, cam_mac):
         print(payload)
         sock.sendto(payload, ("255.255.255.255", 6011))
     sock.close()
+    return 'Done maybe!'
 
 
 if __name__ == '__main__':
@@ -90,7 +93,6 @@ if __name__ == '__main__':
     thread_wiretapping.join()
     result = q.get()
     print(result)
-    #    print(q.get())
 
     ip = input('На какой ip заменяем?: ').strip()
-    replace_ip(ip, mac)
+    print(replace_ip(ip, mac))
