@@ -5,10 +5,12 @@ import tkinter as tk
 from threading import Lock
 from threading import Thread
 from time import sleep
+import time
 from tkinter import ttk
 import requests
 from pythonping import ping
 from threading import Event
+import psutil
 
 range_of_shwitches_start = "10.100.2.0"
 range_of_shwitches_stop = "10.100.70.16"
@@ -17,14 +19,14 @@ gateway = "192.168.1.1"
 ips_of_switches = ("10.100.2.1", "10.100.2.2", "10.100.11.3", "10.100.11.4",
                    "10.100.11.5", "10.100.11.6", "10.100.12.3", "10.100.12.4", "10.100.12.5", "10.100.12.6",
                    "10.100.13.3", "10.100.13.4", "10.100.13.5", "10.100.14.3", "10.100.14.4", "10.100.14.5",
-                   "10.100.14.6", "10.100.14.7", "10.100.15.3","10.100.15.4", "10.100.15.5", "10.100.15.6",
+                   "10.100.14.6", "10.100.14.7", "10.100.15.3", "10.100.15.4", "10.100.15.5", "10.100.15.6",
                    "10.100.15.7", "10.100.15.8", "10.100.15.9", "10.100.15.10", "10.100.16.3", "10.100.16.4",
                    "10.100.16.5", "10.100.16.6", "10.100.16.7", "10.100.16.8", "10.100.16.9", "10.100.17.3",
                    "10.100.17.4", "10.100.17.5", "10.100.17.6", "10.100.17.7", "10.100.17.8", "10.100.17.9",
                    "10.100.18.3", "10.100.18.4", "10.100.18.5", "10.100.18.6", "10.100.18.7", "10.100.19.3",
                    "10.100.19.4", "10.100.19.5", "10.100.19.6", "10.100.19.7", "10.100.19.8", "10.100.20.3",
-                   "10.100.20.4", "10.100.20.5", "10.100.20.6", "10.100.20.7","10.100.21.3", "10.100.21.4",
-                   "10.100.21.5", "10.100.21.6", "10.100.21.7",  "10.100.21.8", "10.100.21.9", "10.100.21.10",
+                   "10.100.20.4", "10.100.20.5", "10.100.20.6", "10.100.20.7", "10.100.21.3", "10.100.21.4",
+                   "10.100.21.5", "10.100.21.6", "10.100.21.7", "10.100.21.8", "10.100.21.9", "10.100.21.10",
                    "10.100.21.11", "10.100.21.12", "10.100.95.3", "10.100.96.3", "10.100.31.1", "10.100.31.2",
                    "10.100.31.3", "10.100.31.4", "10.100.31.5", "10.100.32.1", "10.100.32.2", "10.100.32.3",
                    "10.100.32.4", "10.100.32.5", "10.100.32.6", "10.100.32.7", "10.100.32.8", "10.100.32.9",
@@ -57,7 +59,7 @@ ips_of_switches = ("10.100.2.1", "10.100.2.2", "10.100.11.3", "10.100.11.4",
                    "10.100.93.7", "10.100.93.8", "10.100.93.9", "10.100.93.10", "10.100.93.11", "10.100.93.12",
                    "10.100.93.13", "10.100.93.14", "10.100.93.15", "10.100.94.1", "10.100.94.2", "10.100.94.3",
                    "10.100.94.4", "10.100.94.5", "10.100.94.6", "10.100.94.7", "10.100.94.8", "10.100.94.9",
-                   "10.100.94.10", "10.100.94.11", "10.100.94.12", )
+                   "10.100.94.10", "10.100.94.11", "10.100.94.12",)
 ips_def = []  # [["def_ip", ip, mac], ...]
 names_def = []
 ips_for_change = []  # [[self.IP(sw), port, target_mac],...]
@@ -186,6 +188,9 @@ def request_for_change_ip():
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    hostname = socket.gethostname()
+    local_ip = socket.gethostbyname(hostname)
+    sock.bind((local_ip, 0))
     for _ in range(3):
         payload_hex_string = prl.encode('cp1252').hex()
         payload = bytes.fromhex(payload_hex_string)
@@ -224,7 +229,7 @@ def creator_sw():
     global found_mac
     while True:
         for ip in ips_def:
-            if "192.168.1.188" == ip[1]:
+            if "192.168.1.188" == ip[1] or "169.254.1.89" == ip[1]:
                 if ip[2] in [i[2] for i in ips_for_change]:
                     continue
                 for sw in ips_of_switches:
@@ -237,7 +242,7 @@ def creator_sw():
                     switch.start()
                 for _ in range(len(switches)):
                     swd = switches.pop()
-                    del(swd)
+                    del (swd)
                 found_mac.clear()
             else:
                 sleep(0.1)
@@ -251,7 +256,7 @@ class Switch(Thread):
         self.IP = ip
         self.AUTH_SW = auth_tion
         self.target_mac = target_mac
-        #self.run()
+        # self.run()
 
     global ips_for_change
 
@@ -262,7 +267,7 @@ class Switch(Thread):
             except ConnectionError as exc:
                 print("Wrong ConnectionError", exc)
             except EOFError as exc:
-                print ("Wrong EOFError", exc)
+                print("Wrong EOFError", exc)
                 pass
 
     def search_mac_telnet(self, target_mac):
@@ -330,7 +335,7 @@ def wiretapping():
                 str_ch_ip = f"192.{changing_ip[0].split('.')[2]}.{changing_ip[0].split('.')[3]}.{changing_ip[1]}"
                 if str_ch_ip in addr:
                     changed_scsf = True
-            if '192.168.1.188' in addr:
+            if '192.168.1.188' in addr or "169.254.1.89" in addr:
                 ip_def = True
                 break
             else:
@@ -354,7 +359,7 @@ def wiretapping():
                 if mac and i and i[2] == mac[0]:
                     is_mac = 1
             if mac and is_mac == 0:
-                ips_def.append(["def_ip", "192.168.1.188", mac[0]])
+                ips_def.append(["def_ip", addr[0], mac[0]])
             lock.release()
             ip_def = False
         elif name_def:
@@ -370,15 +375,36 @@ def wiretapping():
 
 
 def sender():
+    interfaces = psutil.net_if_addrs()
     while True:
-        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)  # UDP
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-        for i in range(3):
-            payload_hex_string = "f0debcfa88c30800"
-            payload = bytes.fromhex(payload_hex_string)
-            sock.sendto(payload, ("255.255.255.255", 6011))
-        sock.close()
+        for interface_name, interface_addresses in interfaces.items():
+
+            for address in interface_addresses:
+                if address.family == socket.AF_INET:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                    try:
+                        # UDP
+                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                        sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+                        sock.bind((address.address, 0))
+                        payload_hex_string = "f0debcfa88c30800"
+                        payload = bytes.fromhex(payload_hex_string)
+
+                        for _ in range(3):
+
+                            try:
+                                # sock.bind((address.address, 0))
+                                sock.sendto(payload, ("255.255.255.255", 6011))
+                            except:
+                                pass
+
+                        sock.close()
+                    except Exception as e:
+                        # print(f'An error occured: {e}')
+                        sock.close()
+                        continue
+                    finally:
+                        sock.close()
         sleep(0.5)
 
 
