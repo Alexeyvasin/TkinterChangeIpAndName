@@ -1,3 +1,4 @@
+import datetime
 import re
 import socket
 import telnetlib
@@ -5,12 +6,12 @@ import tkinter as tk
 from threading import Lock
 from threading import Thread
 from time import sleep
-import time
 from tkinter import ttk
 import requests
 from pythonping import ping
 from threading import Event
 import psutil
+import datetime
 
 range_of_shwitches_start = "10.100.2.0"
 range_of_shwitches_stop = "10.100.70.16"
@@ -95,6 +96,10 @@ def start_thread_for_change_ip():
     global auth
     global net_mask
     global gateway
+
+    with open('changed.txt', 'a') as file:
+        file.write('__________________________________________________\n')
+        file.write(str(datetime.datetime.now())+'\n')
     tr_change_ip = Thread(target=change_ip, daemon=True)
     if button_change_ip["text"] == "Change IP":
         auth = f"{entry_log.get()}:{entry_pass.get()}"
@@ -123,6 +128,8 @@ def change_ip():
             sleep(0.5)
             if changed_scsf:
                 str_ch_ip = f"192.{changing_ip[0].split('.')[2]}.{changing_ip[0].split('.')[3]}.{changing_ip[1]}"
+                with open("changed.txt", 'a') as file:
+                    file.write(str_ch_ip+'\n')
                 changed_scsf = False
                 for n, i in enumerate(ips_def):
                     if changing_ip and changing_ip[2] == i[2]:
@@ -371,6 +378,10 @@ def wiretapping():
             if for_append not in names_def:
                 names_def.append(for_append)
                 names_for_change.append(for_append)
+                with open("names_for_change.txt", "w") as f_handler:
+                    for name in sorted(names_for_change[:]):
+                        f_handler.write(str(name) + "\n")
+                print(names_for_change)
             name_def = False
 
 
